@@ -1,0 +1,8 @@
+.DS_Store
+deploy/
+rcc.*
+rcc_*
+moc.*
+moc_*
+*.swp
+*.pro
