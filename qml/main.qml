@@ -8,15 +8,16 @@ ApplicationWindow {
     title: "Hello World Example"
     minimumWidth: 1000
     minimumHeight: 700
+    color: "#111"
 
     RowLayout {
         id: container
         anchors.fill: parent
         spacing: 0
 
-        function showImage(index) {
-            leftScreen.source = presenter.getImage(index + 1).original
-            rightScreen.source = presenter.getImage(index).original
+        function showImage(imgs) {
+            leftScreen.source = imgs[1] || ""
+            rightScreen.source = imgs[0]
         }
 
         focus: true
@@ -26,12 +27,18 @@ ApplicationWindow {
             }
         }
         Keys.onRightPressed: {
-            thumbnails.currentIndex = thumbnails.currentIndex - 2
-            showImage(thumbnails.currentIndex)
+            if(presenter.hasPrev()) {
+                var imgs = presenter.prevImages()
+                showImage(imgs)
+                thumbnails.currentIndex = presenter.getPage() - 1
+            }
         }
         Keys.onLeftPressed: {
-            thumbnails.currentIndex = thumbnails.currentIndex + 2
-            showImage(thumbnails.currentIndex)
+            if(presenter.hasNext()) {
+                var imgs = presenter.nextImages()
+                showImage(imgs)
+                thumbnails.currentIndex = presenter.getPage() - 1
+            }
         }
 
         ListView {
@@ -44,6 +51,7 @@ ApplicationWindow {
             Component {
                 id: thumbsDelegate
                 Image {
+                    id: thumb
                     anchors.horizontalCenter: parent.horizontalCenter
                     asynchronous: true
                     cache: false
@@ -56,7 +64,15 @@ ApplicationWindow {
                     MouseArea {
                         anchors.fill: parent
                         onClicked: {
-                            container.showImage(index)
+                            thumbnails.currentIndex = index
+                            presenter.setPage(index + 1)
+                            var imgs = presenter.getImages()
+                            container.showImage(imgs)
+                        }
+                    }
+                    onStatusChanged: {
+                        if (thumb.status == Image.Ready) {
+                            thumb.height = thumb.implicitHeight * (parseFloat(thumb.width) / thumb.implicitWidth)
                         }
                     }
                 }
@@ -76,7 +92,8 @@ ApplicationWindow {
                 onDropped: {
                     if (drop.hasUrls) {
                         presenter.fileDropped(drop.urls[0])
-                        container.showImage(0)
+                        var imgs = presenter.getImages()
+                        container.showImage(imgs)
                         thumbnails.model.modelReset()
                     }
                 }
